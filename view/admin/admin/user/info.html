@@ -1,0 +1,42 @@
+{{include file="admin/block/header" /}}
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body" pad15>
+
+                    <div class="layui-form" lay-filter="">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">我的角色</label>
+                            <div class="layui-input-inline">
+                                <select name="role" disabled>
+                                    {{foreach $roles as $role}}
+                                    <option value="{{$role.role_id}}" {{if($role.role_id == $user.role_id)}}selected{{/if}}>{{$role.name}}</option>
+                                    {{/foreach}}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">我的账号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="username" value="{{$user.name}}" readonly class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">创建时间</label>
+                            <div class="layui-input-inline">
+                                <input type="text" value="{{$user.dateline}}" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{include file="admin/block/footer" /}}
+
+<script>
+    layui.use(['index', 'form',  'admin'], function () {});
+</script>

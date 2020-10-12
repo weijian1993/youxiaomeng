@@ -1,0 +1,176 @@
+{{include file="admin/block/header" /}}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding-top: 60px;">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">网站分类</label>
+        <div class="layui-input-block">
+            <select name="cate_id">
+                <option value="">全部</option>
+                {{foreach $cates as $k=>$cate}}
+                <option value="{{$cate.cate_id}}"  {{if condition="$cate.cate_id ==$detail.cate_id"}}selected{{/if}} >{{$cate.title}}</option>
+                {{/foreach}}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">网站名称</label>
+        <div class="layui-input-block">
+            <input type="text" placeholder="网站名称" name="title" autocomplete="off" class="layui-input" value="{{$detail.title}}">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">网站地址</label>
+        <div class="layui-input-block">
+            <input type="text" placeholder="网站地址" name="url" autocomplete="off" class="layui-input" value="{{$detail.url}}">
+        </div>
+    </div>
+    <div class="layui-row">
+        <div class="layui-col-md4">
+            <div class="layui-form-item">
+                <label class="layui-form-label">字符检测</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="status" lay-filter="specification" value="0" {{if($detail.status==0)}}checked{{/if}} title="是">
+                    <input type="radio" name="status" lay-filter="specification" value="1" {{if($detail.status==1)}}checked{{/if}} title="否">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item" id="specification" style="display: none">
+        <label class="layui-form-label">特殊字符</label>
+        <div class="layui-input-block">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th>字符名称</th>
+                    <th><a href="javascript:;" class="layui-btn layui-btn-xs addHongbao">新增字符</a></th>
+                </tr>
+                </thead>
+                <tbody id="size">
+                {{foreach $detail.special as $vv}}
+                <tr>
+                    <td>
+                        <div class="layui-input-block">
+                            <input type="text" autocomplete="off"  class="layui-input" value="{{$vv}}">
+                        </div>
+                    </td>
+                    <td>
+                        <a href="javascript:;" class="layui-btn layui-btn-danger layui-btn-xs del">删除此行</a>
+                    </td>
+                </tr>
+                {{/foreach}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">网站排序</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body" style="width: 90%;margin: 0 0 0 -13px; ">
+                <div id="slider"></div>
+                <input type="hidden" name="orderby" value="{{$detail.orderby}}">
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="submit" id="submit" value="确认">
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'form',  'admin','slider','tableSelect'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let admin = layui.admin;
+        let slider = layui.slider;
+
+        if({{$detail.status}}==0){
+            $("#specification").css("display", "block");
+        }
+        if({{$detail.status}}==1){
+            $("#specification").css("display", "none");
+        }
+
+
+        form.on('radio(specification)', function (data) {
+            if (data.value == '0') {
+                $("#specification").css("display", "block");
+            } else {
+                $("#specification").css("display", "none");
+            }
+        });
+        // 新增一行
+        $('.addHongbao').click(function () {
+            $('#size').append(getHtml());
+            form.render('select');
+        });
+        // 删除一行
+        $(document).on('click', '.del', function () {
+            let count = $(this).parent().parent().parent().children('tr').length;
+
+            $(this).parent().parent().remove();
+        });
+
+
+
+        // 滑块
+        slider.render({
+            elem: '#slider',
+            input: true,
+            min: 1,
+            max: 500,
+            value:"{{$detail.orderby}}",
+            setTips: function(value){ //自定义提示文本
+                return value;
+            },
+            change: function(value){
+                $('#slider').next().val(value);
+            }
+        });
+
+        //监听提交
+        form.on('submit(submit)', function(data){
+            let field = data.field;
+            let special = [];
+            $('#size tr').each(function () {
+                let title = $(this).find('input').eq(0).val();
+                special.push(title);
+            });
+            field.special = special;
+            admin.req({
+                url: "{{:url('/admin.url.url/edit',['urlId'=>$detail.url_id])}}",
+                type: 'post',
+                data: field,
+                done: function (res) {
+                    layer.msg('修改成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 500
+                    }, function () {
+                        let selfName = parent.layer.getFrameIndex(window.name);
+                        parent.layui.table.reload('items');
+                        parent.layer.close(selfName);
+                    });
+                }
+            });
+        });
+
+
+        // 获取增加的html
+        function getHtml() {
+            let html = '<tr>';
+            html += "<td>";
+            html += "<div class=\"layui-input-block\">";
+            html += "<input type=\"text\" autocomplete=\"off\" lay-verify=\"required\"  class=\"layui-input\" value=\"\">";
+            html += "</div>";
+            html += "</td>";
+            html += "<td>";
+            html += "<a href=\"javascript:;\" class=\"layui-btn layui-btn-danger layui-btn-xs del\">删除此行</a>";
+            html += "</td>";
+            html += "</tr>";
+            return html;
+        }
+    });
+</script>
+

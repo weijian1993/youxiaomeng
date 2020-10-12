@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>出错了</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="/public/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/public/layuiadmin/style/admin.css" media="all">
+</head>
+<body>
+
+
+<div class="layui-fluid">
+    <div class="layadmin-tips">
+        <i class="layui-icon" face>&#xe664;</i>
+
+        <div class="layui-text" style="font-size: 20px;">
+            <p>错误信息：<?php echo(strip_tags($msg));?></p>
+            <p><b id="wait">3</b>秒后自动关闭</p>
+            <p style="display:none " id="error"><?php echo($error);?></p>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="/public/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '/public/layuiadmin/' //静态资源所在路径
+    }).extend({
+        index: 'lib/index' //主入口模块
+    }).use(['index','admin'],function () {
+        var wait = document.getElementById('wait');
+        var error = document.getElementById('error').innerHTML;
+        if (error == 1001){
+            parent.window.location.href="/admin/passport/login";
+        }else{
+            var interval = setInterval(function () {
+                var time = --wait.innerHTML;
+                if (time <= 0) {
+                    layui.admin.events.closeThisTabs();
+                    let selfName = parent.layer.getFrameIndex(window.name);
+                    parent.layer.close(selfName);
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+{{include file="admin/block/header" /}}
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+
+        <div class="layui-col-sm6 layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    新增访问量
+                    <span class="layui-badge layui-bg-blue layuiadmin-badge">月</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+                    <p class="layuiadmin-big-font">{{$data.visitNum}}</p>
+                    <p>
+                        总计访问量
+                        <span class="layuiadmin-span-color">
+                            {{$data.allVisitNum}} <i class="layui-inline layui-icon layui-icon-flag"></i>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    新增用户数
+                    <span class="layui-badge layui-bg-blue layuiadmin-badge">月</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+                    <p class="layuiadmin-big-font">{{$data.memberNum}}</p>
+                    <p>
+                        总用户数
+                        <span class="layuiadmin-span-color">
+                            {{$data.allMemberNum}} <i class="layui-inline layui-icon layui-icon-face-smile-b"></i>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md4">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    新增收入
+                    <span class="layui-badge layui-bg-blue layuiadmin-badge">月</span>
+                </div>
+                <div class="layui-card-body layuiadmin-card-list">
+
+                    <p class="layuiadmin-big-font">{{$data.billsNum}}</p>
+                    <p>
+                        总收入
+                        <span class="layuiadmin-span-color">
+                            {{$data.allBillsNum}} <i class="layui-inline layui-icon layui-icon-dollar"></i>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-col-sm12">
+            <div class="layui-card">
+                <div class="layui-card-header">访问量</div>
+                <div class="layui-card-body">
+                    <div class="layui-row">
+                        <div class="layui-col-sm8">
+                            <div id="visit"></div>
+                        </div>
+                        <div class="layui-col-sm4">
+                            <div class="layuiadmin-card-list">
+                                <p class="layuiadmin-normal-font">月访问数</p>
+                                <span>同上期增长</span>
+                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
+                                    <div class="layui-progress-bar" lay-percent="{{$data.visitRatio}}"></div>
+                                </div>
+                            </div>
+                            <div class="layuiadmin-card-list">
+                                <p class="layuiadmin-normal-font">月用户数</p>
+                                <span>同上期增长</span>
+                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
+                                    <div class="layui-progress-bar" lay-percent="{{$data.memberRatio}}"></div>
+                                </div>
+                            </div>
+                            <div class="layuiadmin-card-list">
+                                <p class="layuiadmin-normal-font">月收入数</p>
+                                <span>同上期增长</span>
+                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
+                                    <div class="layui-progress-bar" lay-percent="{{$data.billsRatio}}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script src="//cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+<script>
+    layui.use(['index', 'admin'], function () {
+        let $ = layui.$;
+        let statistics = '{{$statistics|raw|json_encode}}';
+        statistics = eval("(" + statistics + ")");
+        hightChar('visit', statistics.x, statistics.visit, '本月访问量');
+
+
+        function hightChar(dom, x, data, info) {
+            Highcharts.chart(dom, {
+                credits: {
+                    enabled: false //不显示LOGO
+                },
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: info
+                },
+                subtitle: {
+                    text: ''
+                },
+                yAxis: {
+                    title: {
+                        text: ''
+                    }
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle'
+                },
+
+                plotOptions: {
+                    series: {
+                        label: {
+                            connectorAllowed: false
+                        }
+                    }
+                },
+                xAxis: {
+                    categories: x
+                },
+                series: [
+                    {
+                        name: info,
+                        data: _parseFloat(data),
+                        dataLabels: {
+                            //设置柱上的数字显示样式
+                            enabled: true,
+                            color: '#666',
+                            align: 'center',
+                            x: 14,
+                            y: 0,
+                            style: {
+                                fontSize: '13px',
+                                fontFamily: 'Verdana, sans-serif'
+                            }
+                        }
+                    }
+                ],
+                tooltip: {
+                    shared: true,
+                    crosshairs: true,
+                },
+                exporting: {
+                    enabled: false
+                },
+                responsive: {
+                    rules: [{
+                        condition: {
+                            maxWidth: 500
+                        },
+                        chartOptions: {
+                            legend: {
+                                layout: 'horizontal',
+                                align: 'center',
+                                verticalAlign: 'bottom'
+                            }
+                        }
+                    }]
+                }
+            });
+        }
+
+
+        //处理成浮点型
+        function _parseFloat(data) {
+            $.each(data, function (k, v) {
+                data[k] = parseFloat(v)
+            });
+            return data;
+        }
+    });
+
+</script>
+
+

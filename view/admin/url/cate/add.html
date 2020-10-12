@@ -1,0 +1,74 @@
+{{include file="admin/block/header" /}}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding-top: 60px;">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">分类名称</label>
+        <div class="layui-input-inline">
+            <input type="text" name="title" placeholder="请输入分类名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">分类排序</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body" style="width: 90%;margin: 0 0 0 -13px; ">
+                <div id="slider"></div>
+                <input type="hidden" name="orderby" value="250">
+            </div>
+        </div>
+    </div>
+
+
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="submit" id="submit" value="确认">
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'form',  'admin','upload','tableSelect','slider'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let admin = layui.admin;
+
+        let slider = layui.slider;
+        // 滑块
+        slider.render({
+            elem: '#slider',
+            input: true,
+            min: 1,
+            max: 500,
+            value:250,
+            setTips: function(value){ //自定义提示文本
+                return value;
+            },
+            change: function(value){
+                $('#slider').next().val(value);
+            }
+        });
+
+        //监听提交
+        form.on('submit(submit)', function(data){
+            let field = data.field;
+            admin.req({
+                url: "{{:url('/admin.url.cate/add')}}",
+                type: 'post',
+                data: field,
+                done: function (res) {
+                    layer.msg('添加成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 500
+                    }, function () {
+                        let selfName = parent.layer.getFrameIndex(window.name);
+                        parent.layui.table.reload('items');
+                        parent.layer.close(selfName);
+                    });
+                }
+            });
+        });
+
+
+    });
+</script>
+

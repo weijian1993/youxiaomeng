@@ -1,0 +1,124 @@
+{{include file="admin/block/header" /}}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 40px 0 0 40px;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">图标选择</label>
+        <div class="layui-input-inline">
+            <input type="text" name="icon" id="iconPicker" lay-filter="iconPicker" class="hide">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">上级菜单</label>
+        <div class="layui-input-inline">
+            <select name="pid" lay-verify="required">
+                <option value="0">顶级菜单</option>
+                {{foreach $items as $item}}
+                <option value="{{$item.auth_id}}">{{$item.title}}</option>
+                {{/foreach}}
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限标题</label>
+        <div class="layui-input-inline">
+            <input type="text" name="title" lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限标识</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" lay-verify="required" placeholder="请输入标识" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限路径</label>
+        <div class="layui-input-inline">
+            <input type="text" name="path" placeholder="请输入路径" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限类型</label>
+        <div class="layui-input-inline">
+            <input type="radio" name="type" value="menu" title="菜单" checked>
+            <input type="radio" name="type" value="button" title="按钮">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否隐藏</label>
+        <div class="layui-input-inline">
+            <input type="radio" name="hidden" value="0" title="显示" checked>
+            <input type="radio" name="hidden" value="1" title="隐藏">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">记录日志</label>
+        <div class="layui-input-inline">
+            <input type="radio" name="record" value="0" title="关闭" checked>
+            <input type="radio" name="record" value="1" title="打开">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">权限排序</label>
+        <div class="layui-input-block">
+            <div class="layui-card-body" style="width: 90%;margin: 0 0 0 -13px; ">
+                <div id="slider"></div>
+                <input type="hidden" name="orderby" value="250">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="auth-submit" id="auth-submit" value="确认添加">
+        <input type="button" lay-submit lay-filter="layuiadmin-app-form-edit" id="layuiadmin-app-form-edit" value="确认编辑">
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'form',  'admin','slider','iconPickerFa'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let admin = layui.admin;
+        let slider = layui.slider;
+        let iconPickerFa = layui.iconPickerFa;
+        // 图标选择器
+        iconPickerFa.render({
+            elem: '#iconPicker',
+            url: "/layuiadmin/style/variables.less",
+            search: true,
+            page: true,
+            limit: 12
+        });
+        // 滑块
+        slider.render({
+            elem: '#slider',
+            input: true,
+            min: 1,
+            max: 500,
+            value:250,
+            setTips: function(value){ //自定义提示文本
+                return value;
+            },
+            change: function(value){
+                $('#slider').next().val(value);
+            }
+        });
+        //监听提交
+        form.on('submit(auth-submit)', function(data){
+            let field = data.field;
+            admin.req({
+                url: "{{:url('/admin.admin.auth/add')}}",
+                type: 'post',
+                data: field,
+                done: function (res) {
+                    layer.msg('添加成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 500
+                    }, function () {
+                        parent.window.location.reload();
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+

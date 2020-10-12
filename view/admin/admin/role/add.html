@@ -1,0 +1,49 @@
+{{include file="admin/block/header" /}}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding-top: 60px;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色名称</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" lay-verify="required" placeholder="请输入名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色类型</label>
+        <div class="layui-input-inline">
+            <input type="radio" name="root" value="1" title="超管" >
+            <input type="radio" name="root" value="0" title="普通" checked>
+        </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="auth-submit" id="submit" value="确认添加">
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'form',  'admin','slider','iconPickerFa'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let admin = layui.admin;
+        //监听提交
+        form.on('submit(auth-submit)', function(data){
+            let field = data.field;
+            admin.req({
+                url: "{{:url('/admin.admin.role/add')}}",
+                type: 'post',
+                data: field,
+                done: function (res) {
+                    layer.msg('添加成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 500
+                    }, function () {
+                        let selfName = parent.layer.getFrameIndex(window.name);
+                        parent.layui.table.reload('items');
+                        parent.layer.close(selfName);
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+

@@ -1,0 +1,65 @@
+{{include file="admin/block/header" /}}
+<div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding-top: 60px;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色选择</label>
+        <div class="layui-input-inline">
+            <select name="role_id" lay-verify="required">
+                <option value="0">请选择</option>
+                {{foreach $roles as $role}}
+                <option value="{{$role.role_id}}">{{$role.name}}</option>
+                {{/foreach}}
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">账号名称</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" lay-verify="required" placeholder="请输入管理员账号名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">登陆密码</label>
+        <div class="layui-input-inline">
+            <input type="text" name="passwd" lay-verify="required" placeholder="请输入管理员登陆密码" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">重复密码</label>
+        <div class="layui-input-inline">
+            <input type="text" name="repasswd" lay-verify="required" placeholder="请输入确认登陆密码" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+        <input type="button" lay-submit lay-filter="submit" id="submit" value="确认">
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'form',  'admin'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let admin = layui.admin;
+        //监听提交
+        form.on('submit(submit)', function(data){
+            let field = data.field;
+            admin.req({
+                url: "{{:url('/admin.admin.user/add')}}",
+                type: 'post',
+                data: field,
+                done: function (res) {
+                    layer.msg('添加成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 500
+                    }, function () {
+                        let selfName = parent.layer.getFrameIndex(window.name);
+                        parent.layui.table.reload('items');
+                        parent.layer.close(selfName);
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+

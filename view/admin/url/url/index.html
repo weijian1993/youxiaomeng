@@ -1,0 +1,305 @@
+{{include file="admin/block/header" /}}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+            <div class="layui-form-item">
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">网站名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="SO[title]" placeholder="请输入网站名称" autocomplete="off"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">网址名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="SO[url]" placeholder="请输入网址名称" autocomplete="off"
+                               class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">网站分类</label>
+                    <div class="layui-input-inline">
+                        <select name="SO[cate_id]">
+                            <option value="">全部</option>
+                            {{foreach $cates as $k=>$cate}}
+                            <option value="{{$cate.cate_id}}">{{$cate.title}}</option>
+                            {{/foreach}}
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">检测状态</label>
+                    <div class="layui-input-inline">
+                        <select name="SO[closed]">
+                            <option value="">全部</option>
+                            <option value="0">开启中</option>
+                            <option value="1">关闭中</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">字符检测</label>
+                    <div class="layui-input-inline">
+                        <select name="SO[status]">
+                            <option value="">全部</option>
+                            <option value="0">开启中</option>
+                            <option value="1">关闭中</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">创建时间</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="SO[dateline]" id="range-date" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <button class="layui-btn layuiadmin-btn-list" lay-submit lay-filter="search">
+                        <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                    </button>
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-card-body">
+            <div style="padding-bottom: 10px;">
+                <button class="layui-btn layuiadmin-btn-list" id="btn-del">删除</button>
+                <button class="layui-btn layuiadmin-btn-list" id="btn-add">添加</button>
+            </div>
+            <table id="items" lay-filter="items"></table>
+            <script type="text/html" id="table-content-list">
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">
+                    <i class="layui-icon layui-icon-edit"></i>编辑
+                </a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">
+                    <i class="layui-icon layui-icon-delete"></i>删除
+                </a>
+            </script>
+        </div>
+
+        <script type="text/html" id="buttonTpl" lay-filter="items">
+            {{#  if(d.closed==0){ }}
+            <button class="layui-btn layui-btn-xs" lay-event="close">开启中</button>
+            {{#  } else { }}
+            <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="open">禁止中</button>
+            {{#  } }}
+        </script>
+        <script type="text/html" id="buttonTp2" lay-filter="items">
+            {{#  if(d.status==0){ }}
+            <button class="layui-btn layui-btn-xs" lay-event="status_off">开启中</button>
+            {{#  } else { }}
+            <button class="layui-btn layui-btn-danger layui-btn-xs" lay-event="status_open">禁止中</button>
+            {{#  } }}
+        </script>
+    </div>
+</div>
+
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'table', 'admin', 'laydate', 'tableSelect'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let admin = layui.admin;
+        let laydate = layui.laydate;
+        let $ = layui.$;
+
+        //监听搜索
+        form.on('submit(search)', function (data) {
+            let field = data.field;
+            //执行重载
+            table.reload('items', {
+                where: field
+            });
+        });
+        laydate.render({
+            elem: '#range-date',
+            type: 'datetime',
+            format: 'yyyy/MM/dd',
+            range: true
+        });
+        table.render({
+            elem: "#items",
+            url: "{{:url('/admin.url.url/index')}}",
+            parseData: function (ret) {
+                return {
+                    "code": ret.error,
+                    "msg": ret.msg,
+                    "count": ret.data.count,
+                    "data": ret.data.items
+                };
+            },
+            cols: [[
+                {type: "checkbox", fixed: "left"},
+                {field: "title", title: "名称"},
+                {field: "url", title: "网站地址"},
+                {field: "cate", title: "分类名称"},
+                {field: "audit", title: "检测状态", templet: "#buttonTpl", minWidth: 80, align: "center"},
+                {field: "status", title: "字符检测", templet: "#buttonTp2", minWidth: 80, align: "center"},
+                // {field: "special", title: "特殊字符"},
+                {field: "orderby", title: "排序"},
+                {field: "dateline", title: "创建时间"},
+                {title: "操作", align: "right", fixed: "right", toolbar: "#table-content-list"}
+            ]],
+            page: true,
+            limit: 15,
+            limits: [10, 15, 20, 25, 30],
+            text: {none: '无数据'}
+        });
+
+        //监听操作栏
+        table.on('tool(items)', function (obj) {
+            let data = obj.data;
+            let layEvent = obj.event;
+            let urlId = data.url_id;
+            if (layEvent === 'del') {
+                let params = [urlId];
+                deletes(params);
+            } else if (layEvent === 'edit') {
+                let link = '{{:url("/admin.url.url/edit",["urlId"=>"__url_id__"])}}';
+                link = link.replace("__url_id__", urlId);
+                let index =  layer.open({
+                    type: 2,
+                    title: '编辑网站',
+                    content: link,
+                    maxmin: true,
+                    area: ['600px', '500px'],
+                    btn: ['确定', '取消'],
+                    yes: function (index, layero) {
+                        //点击确认触发 iframe 内容中的按钮提交
+                        layero.find('iframe').contents().find("#submit").click();
+                    }
+                });
+                layer.full(index);
+            }
+            else if (layEvent === 'close') {
+                layer.confirm('是否关闭检测？', function (elem) {
+                    admin.req({
+                        url: "{{:url('/admin.url.url/close',['urlId'=>'__urlId__'])}}".replace('__urlId__',urlId),
+                        type: 'post',
+                        data: {urlId: urlId},
+                        done: function () {
+                            layer.msg('关闭成功', {
+                                offset: '15px',
+                                icon: 1,
+                                time: 500
+                            }, function () {
+                                table.reload('items');
+                            });
+                        }
+                    });
+                    layer.close(elem);
+                });
+            } else if (layEvent === 'open') {
+                layer.confirm('是否开启检测？', function (elem) {
+                    admin.req({
+                        url: "{{:url('/admin.url.url/open',['urlId'=>'__urlId__'])}}".replace('__itemId__',urlId),
+                        type: 'post',
+                        data: {urlId: urlId},
+                        done: function () {
+                            layer.msg('开启成功', {
+                                offset: '15px',
+                                icon: 1,
+                                time: 500
+                            }, function () {
+                                table.reload('items');
+                            });
+                        }
+                    });
+                    layer.close(elem);
+                });
+            }
+            else if (layEvent === 'status_off') {
+                layer.confirm('是否关闭字符检测？', function (elem) {
+                    admin.req({
+                        url: "{{:url('/admin.url.url/status_off',['urlId'=>'__urlId__'])}}".replace('__urlId__',urlId),
+                        type: 'post',
+                        data: {urlId: urlId},
+                        done: function () {
+                            layer.msg('关闭成功', {
+                                offset: '15px',
+                                icon: 1,
+                                time: 500
+                            }, function () {
+                                table.reload('items');
+                            });
+                        }
+                    });
+                    layer.close(elem);
+                });
+            } else if (layEvent === 'status_open') {
+                layer.confirm('是否开启字符检测？', function (elem) {
+                    admin.req({
+                        url: "{{:url('/admin.url.url/status_open',['urlId'=>'__urlId__'])}}".replace('__itemId__',urlId),
+                        type: 'post',
+                        data: {urlId: urlId},
+                        done: function () {
+                            layer.msg('开启成功', {
+                                offset: '15px',
+                                icon: 1,
+                                time: 500
+                            }, function () {
+                                table.reload('items');
+                            });
+                        }
+                    });
+                    layer.close(elem);
+                });
+            }
+
+        });
+
+
+        // 批量删除
+        $("#btn-del").click(function () {
+            let checkStatus = table.checkStatus('items');
+            let checkData = checkStatus.data;
+            if (checkData.length === 0) {
+                return layer.msg('请选择要删除的数据');
+            }
+            let params = [];
+            $.each(checkData, function (k, v) {
+                params.push(v.url_id);
+            });
+            deletes(params);
+        });
+        // 添加数据
+        $("#btn-add").click(function () {
+            let index = layer.open({
+                type: 2,
+                title: '添加网址',
+                content: '{{:url("/admin.url.url/add")}}',
+                maxmin: true,
+                area: ['600px', '700px'],
+                btn: ['确定', '取消'],
+                yes: function (index, layero) {
+                    //点击确认触发 iframe 内容中的按钮提交
+                    layero.find('iframe').contents().find("#submit").click();
+                }
+            });
+            layer.full(index);
+        });
+
+        // 删除操作
+        function deletes(params) {
+            layer.confirm('确定删除吗？', function (e) {
+                admin.req({
+                    url: "{{:url('/admin.url.url.delete')}}",
+                    type: 'post',
+                    data: {urlIds: params},
+                    done: function () {
+                        layer.msg('删除成功', {
+                            offset: '15px',
+                            icon: 1,
+                            time: 500
+                        }, function () {
+                            table.reload('items');
+                        });
+                    }
+                });
+                layer.close(e);
+            });
+        }
+    });
+</script>

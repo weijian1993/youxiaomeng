@@ -1,0 +1,129 @@
+{{include file="admin/block/header" /}}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <table id="munu-table" class="layui-table" lay-filter="munu-table"></table>
+            <script type="text/html" id="buttonTpl">
+                {{#  if(d.hidden){ }}
+                <button class="layui-btn layui-btn-xs">隐藏</button>
+                {{#  } else { }}
+                <button class="layui-btn layui-btn-primary layui-btn-xs">显示</button>
+                {{#  } }}
+            </script>
+        </div>
+    </div>
+    <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list"
+         style="padding-top: 60px;">
+        <div class="layui-form-item layui-hide">
+            <input type="button" lay-submit lay-filter="submit" id="submit" value="确认">
+        </div>
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'table', 'treetable', 'admin'], function () {
+        let $ = layui.jquery;
+        let form = layui.form;
+        let table = layui.table;
+        let treetable = layui.treetable;
+        let admin = layui.admin;
+        // 渲染表格
+        layer.load();
+        treetable.render({
+            treeColIndex: 1,
+            treeSpid: 0,
+            treeIdName: 'auth_id',
+            treePidName: 'pid',
+            elem: '#munu-table',
+            url: '{{:url("/admin.admin.role/priv",["roleId"=>$detail.role_id])}}',
+            page: false,
+            cols: [[
+                {type: "checkbox", fixed: "left"},
+                {field: 'title', minWidth: 200, title: '权限名称'},
+                {field: 'path', title: '菜单url'},
+                {
+                    field: 'type', width: 80, align: 'center', templet: function (d) {
+                        if (d.type === 'button') {
+                            return '<span class="layui-badge layui-bg-blue">按钮</span>';
+                        } else {
+                            return '<span class="layui-badge layui-bg-blue">菜单</span>';
+                        }
+                    }, title: '类型'
+                },
+            ]],
+            done: function () {
+                layer.closeAll('loading');
+            }
+        });
+
+        //监听提交
+        form.on('submit(submit)', function (data) {
+            let checkStatus = table.checkStatus('munu-table');
+            let priv = [];
+            $.each(checkStatus.data,function (k,v) {
+                priv.push(v.auth_id);
+            });
+            let params = {priv: priv};
+            admin.req({
+                url: "{{:url('/admin.admin.role/setPriv',['role_id'=>$detail.role_id])}}",
+                type: 'post',
+                data: params,
+                done: function (res) {
+                    layer.msg('设置成功', {
+                        offset: '15px'
+                        , icon: 1
+                        , time: 500
+                    }, function () {
+                        let selfName = parent.layer.getFrameIndex(window.name);
+                        parent.layui.table.reload('items');
+                        parent.layer.close(selfName);
+                    });
+                }
+            });
+        });
+
+        // 批量删除
+        $("#btn-del").click(function () {
+            let checkStatus = table.checkStatus('munu-table');
+            let checkData = checkStatus.data;
+            if (checkData.length === 0) {
+                return layer.msg('请选择要删除的数据');
+            }
+            let params = [];
+            $.each(checkData, function (k, v) {
+                params.push(v.auth_id);
+            });
+            deletes(params);
+        });
+
+        table.on('checkbox(munu-table)', function (obj) {
+            let mId = obj.tr.find('span').attr('lay-tid');
+            obj.tr.closest('tbody').find('tr').each(function () {
+                let pid = $(this).find('.treeTable-icon').attr('lay-tpid');
+                if (mId === pid) {
+                    let index = $(this).attr('data-index');
+                    let tableBox = $(this).parents('.layui-table-box');
+                    //存在固定列
+                    if (tableBox.find(".layui-table-fixed.layui-table-fixed-l").length > 0) {
+                        tableDiv = tableBox.find(".layui-table-fixed.layui-table-fixed-l");
+                    } else {
+                        tableDiv = tableBox.find(".layui-table-body.layui-table-main");
+                    }
+                    let checkCell = tableDiv.find("tr[data-index=" + index + "]").find("td div.laytable-cell-checkbox div.layui-form-checkbox I");
+                    if (checkCell.length > 0) {
+                        checkCell.click();
+                    }
+                }
+            });
+        });
+
+        $(document).on("click", "td div.laytable-cell-checkbox div.layui-form-checkbox", function (e) {
+            e.stopPropagation();
+        });
+        $('body').on('click', '.treeTable .treeTable-icon', function () {
+            treetable.toggleRows($(this), false);
+        });
+
+
+    });
+</script>

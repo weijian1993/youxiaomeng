@@ -1,0 +1,184 @@
+{{include file="admin/block/header" /}}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-btn-group">
+                <button class="layui-btn" id="btn-expand">全部展开</button>
+                <button class="layui-btn" id="btn-fold">全部折叠</button>
+            </div>
+            <div class="layui-btn-group">
+                <button class="layui-btn layui-btn-normal" id="btn-add">添加权限</button>
+                <button class="layui-btn layui-btn-danger" id="btn-del" style="display: none">批量删除</button>
+            </div>
+            <blockquote class="layui-elem-quote">
+                注意：要使用批量删除必须全部展开后勾选&emsp;路由排序数字越小,排序越靠前&emsp;记录日志功能勾选后,只记录POST请求的按钮类型路由记录,菜单路由和GET不记录.
+            </blockquote>
+            <table id="items" class="layui-table" lay-filter="items"></table>
+            <script type="text/html" id="buttonTpl">
+                {{#  if(d.hidden){ }}
+                <button class="layui-btn layui-btn-xs">隐藏</button>
+                {{#  } else { }}
+                <button class="layui-btn layui-btn-primary layui-btn-xs">显示</button>
+                {{#  } }}
+            </script>
+            <script type="text/html" id="auth-state">
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">
+                    <i class="layui-icon layui-icon-edit"></i>编辑
+                </a>
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">
+                    <i class="layui-icon layui-icon-delete"></i>删除
+                </a>
+            </script>
+        </div>
+    </div>
+</div>
+{{include file="admin/block/footer" /}}
+<script>
+    layui.use(['index', 'table', 'treetable', 'admin'], function () {
+        let $ = layui.jquery;
+        let table = layui.table;
+        let treetable = layui.treetable;
+        let admin = layui.admin;
+        // 渲染表格
+        layer.load();
+        treetable.render({
+            treeColIndex: 1,
+            treeSpid: 0,
+            treeIdName: 'auth_id',
+            treePidName: 'pid',
+            treeDefaultClose:true,
+            elem: '#items',
+            url: '{{:url("/admin.admin.auth/index")}}',
+            page: false,
+            cols: [[
+                {type: "checkbox", fixed: "left"},
+                {field: 'title', minWidth: 200, title: '权限名称'},
+                {field: 'name', title: '权限标识'},
+                {field: 'path', title: '菜单url'},
+                {field: 'orderby', width: 80, align: 'center', title: '排序号'},
+                {field: 'hidden', width: 80, align: "center", title: '隐藏', templet: "#buttonTpl"},
+                {
+                    field: 'type', width: 80, align: 'center', templet: function (d) {
+                        if (d.type === 'button') {
+                            return '<span class="layui-badge layui-bg-gray">按钮</span>';
+                        } else {
+                            return '<span class="layui-badge layui-bg-blue">菜单</span>';
+                        }
+                    }, title: '类型'
+                },
+                {templet: '#auth-state', width: 200, align: 'center', title: '操作'}
+            ]],
+            done: function () {
+                layer.closeAll('loading');
+            }
+        });
+
+        // 展开全部
+        $('#btn-expand').click(function () {
+            $("#btn-del").show();
+            treetable.expandAll('#items');
+        });
+        // 缩小全部
+        $('#btn-fold').click(function () {
+            $("#btn-del").hide();
+            treetable.foldAll('#items');
+        });
+        //监听操作栏
+        table.on('tool(items)', function (obj) {
+            let data = obj.data;
+            let layEvent = obj.event;
+            let authId = data.auth_id;
+            if (layEvent === 'del') {
+                let params = [authId];
+                deletes(params);
+            } else if (layEvent === 'edit') {
+                let link = '{{:url("/admin.admin.auth/edit",["authId"=>"__authId__"])}}';
+                link = link.replace("__authId__", authId);
+                layer.open({
+                    type: 2,
+                    title: '编辑权限',
+                    content: link,
+                    maxmin: true,
+                    area: ['650px', '650px'],
+                    btn: ['确定', '取消'],
+                    yes: function (index, layero) {
+                        //点击确认触发 iframe 内容中的按钮提交
+                        layero.find('iframe').contents().find("#auth-submit").click();
+                    }
+                });
+            }
+        });
+        // 批量删除
+        $("#btn-del").click(function () {
+            treetable.expandAll('#items');
+            let checkStatus = table.checkStatus('items');
+            let checkData = checkStatus.data;
+            if (checkData.length === 0) {
+                return layer.msg('请选择要删除的数据');
+            }
+            let params = [];
+            $.each(checkData, function (k, v) {
+                params.push(v.auth_id);
+            });
+            deletes(params);
+        });
+        // 添加数据
+        $("#btn-add").click(function () {
+            layer.open({
+                type: 2,
+                title: '添加权限',
+                content: '{{:url("/admin.admin.auth/add")}}',
+                maxmin: true,
+                area: ['650px', '650px'],
+                btn: ['确定', '取消'],
+                yes: function (index, layero) {
+                    //点击确认触发 iframe 内容中的按钮提交
+                    layero.find('iframe').contents().find("#auth-submit").click();
+                }
+            });
+        });
+
+        // 删除操作
+        function deletes(params) {
+            layer.confirm('确定删除吗？', function (e) {
+                admin.req({
+                    url: "{{:url('/admin.admin.auth/delete')}}",
+                    type: 'post',
+                    data: {authIds: params},
+                    done: function () {
+                        layer.msg('删除成功', {
+                            offset: '15px',
+                            icon: 1,
+                            time: 500
+                        }, function () {
+                            window.location.reload();
+                        });
+                    }
+                });
+                layer.close(e);
+            });
+        }
+
+        // 监听权限树形表格展开关闭情况
+        $('body').on('click', '.treeTable .treeTable-icon', function () {
+            var ttype = $(this).attr('lay-ttype');
+            var tOpen = $(this).hasClass('open');
+            if ('dir' == ttype && !tOpen) {
+                $("#btn-del").hide();
+            }else{
+                // 判断全部展开情况下,开启批量删除
+                let open = true;
+                $(".treeTable-icon").each(function () {
+                    if (!$(this).hasClass('open')) {
+                        open = false;
+                        return false;
+                    }
+                });
+                if (open === true){
+                    $("#btn-del").show();
+                }
+            }
+        });
+
+    });
+</script>
